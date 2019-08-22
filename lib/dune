@@ -1,0 +1,4 @@
+(library
+ (name worker_process)
+ (public_name worker_process)
+ (libraries cmdliner lwt zmq-lwt))

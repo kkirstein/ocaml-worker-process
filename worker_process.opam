@@ -1,0 +1,20 @@
+opam-version: "2.0"
+version: "0.0.1"
+maintainer: "kayuwe.kirstein@uster.com"
+authors: ["Kay-Uwe Kirstein"]
+synopsis: "A functor to generate boilerplate code for worker processes."
+license: "proprietary"
+build: [
+	["dune" "subst"] {pinned}
+	["dune" "build" "-p" name "-j" jobs]
+]
+build-test: [
+	["dune" "runtest" "-p" name "-j" jobs]
+]
+depends: [
+	"dune" {build}
+	"cmdliner"
+	"lwt"
+	"zmq-lwt"
+]
+
