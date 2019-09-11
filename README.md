@@ -14,7 +14,10 @@ Communication between controller and workers is done via sockets and uses [ZeroM
 
 # Installation
 
+So far, this package is not released on opam, so you have to pin this repo:
+
 `opam pin worker_process https://github.com/kkirstein/ocaml-worker-process`
+
 `opam install worker_process`
 
 # Status
