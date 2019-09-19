@@ -1,0 +1,5 @@
+(executables
+ (names find_primes worker)
+ (public_names find_primes worker)
+ (libraries worker_process lwt zmq-lwt))
+
