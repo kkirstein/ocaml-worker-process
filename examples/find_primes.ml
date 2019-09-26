@@ -18,7 +18,7 @@ module Controller = Worker_process.Master.Make(struct
 
 let () =
   let open Lwt.Infix in
-  Printf.printf "Finding prime numbers (using %d worker) ..\n" num_worker;
+  Printf.printf "Finding prime numbers < %d (using %d worker) ..\n" limit num_worker;
   Lwt_main.run begin
     let z = Zmq.Context.create () in
     let send_sock = Zmq.Socket.create z Zmq.Socket.push
@@ -41,7 +41,15 @@ let () =
     in
     loop 1 >>= fun () ->
     Controller.recv_response recv limit >>= fun resp ->
-    Printf.printf "Found %d primes.\n" (List.length resp); Lwt.return_unit
+    let primes = List.filter (function | Message.Response.Yes _ -> true | _ -> false) resp
+    in
+    Printf.printf "Found %d primes.\n" (List.length primes);
+    Lwt.return_unit >>= fun () ->
+    Controller.send_request send (List.init num_worker (fun _ -> Message.Request.Stop)) >>= fun () ->
+    Zmq.Socket.close send_sock;
+    Zmq.Socket.close recv_sock;
+    Zmq.Context.terminate z;
+    Lwt.return_unit
   end
 
 
