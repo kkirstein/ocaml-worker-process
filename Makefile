@@ -28,6 +28,9 @@ build:
 test: build
 	ALCOTEST_QUICK_TESTS=1 dune runtest
 
+demo: dist
+	./dist/find_primes
+
 alltest: build
 	dune runtest
 
