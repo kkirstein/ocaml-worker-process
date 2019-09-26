@@ -22,9 +22,11 @@ end
 module type S = sig
   type request
   type response
-  val start_worker : int -> int -> int -> unit Lwt.t
+  val start_worker : Zmq.Context.t -> int -> int -> int ->
+    ([>`Push] Zmq_lwt.Socket.t * [>`Pull] Zmq_lwt.Socket.t) Lwt.t
   val send_request : [`Push] Zmq_lwt.Socket.t -> request list -> unit Lwt.t
   val recv_response : [`Pull] Zmq_lwt.Socket.t -> int -> response list Lwt.t
+  val close : 'a Zmq_lwt.Socket.t -> 'b Zmq_lwt.Socket.t -> unit Lwt.t
 end
 
 
@@ -32,7 +34,7 @@ module Make(C : Controller) = struct
 
   open Lwt.Infix
 
-  let start_worker send_port recv_port num_worker =
+  let start_worker z send_port recv_port num_worker =
     let exe_dir = Sys.executable_name |> Filename.dirname in
     let worker_path = Filename.concat exe_dir C.worker_name in
     let rec loop n =
@@ -52,7 +54,15 @@ module Make(C : Controller) = struct
         Lwt_unix.system cmd_str >>= fun _ -> loop (n - 1)
       else Lwt.return_unit
     in
-    loop num_worker
+    let send_sock = Zmq.Socket.create z Zmq.Socket.push
+    and recv_sock = Zmq.Socket.create z Zmq.Socket.pull in
+    Zmq.Socket.bind send_sock "tcp://127.0.0.1:5555";
+    Zmq.Socket.bind recv_sock "tcp://127.0.0.1:5556";
+    let send = Zmq_lwt.Socket.of_socket send_sock
+    and recv = Zmq_lwt.Socket.of_socket recv_sock
+    in
+    loop num_worker >>= fun () ->
+    Lwt.return (send, recv)
 
 
   let send_request sock msgs =
@@ -72,5 +82,9 @@ module Make(C : Controller) = struct
     in
     loop num []
 
+
+  let close s1 s2 =
+    Zmq_lwt.Socket.close s1 >>= fun () ->
+    Zmq_lwt.Socket.close s2
 
 end

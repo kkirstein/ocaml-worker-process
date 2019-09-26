@@ -43,9 +43,12 @@ module type S = sig
   (** Abstract type of a response message *)
 
 
-  val start_worker : int -> int -> int -> unit Lwt.t
-  (** [start_worker send_port recv_port n] starts [n]
-      processes, which listen on local port [recv_port] and send to [send_port]. *)
+  val start_worker : Zmq.Context.t -> int -> int -> int ->
+    ([>`Push] Zmq_lwt.Socket.t * [>`Pull] Zmq_lwt.Socket.t) Lwt.t
+  (** [start_worker z send_port recv_port n] starts [n]
+      processes, which listen on local port [recv_port] and send to [send_port].
+      [z] is the ZMQ context to be used. [start_worker] returns a pair of [(send, recv)] sockets
+      for communication with the worker processes.  *)
 
 
   val send_request : [`Push] Zmq_lwt.Socket.t -> request list -> unit Lwt.t
@@ -57,12 +60,15 @@ module type S = sig
   (** [recv_response sock num] receives [num] response messages from network
       socket [sock]. *)
 
+  val close : 'a Zmq_lwt.Socket.t -> 'b Zmq_lwt.Socket.t -> unit Lwt.t
+  (** [close s1 s2] closes the given ZMQ sockets *)
+
 end
 (** Output signature of the functor {!Master.Make} *)
 
 
 module Make : functor (C : Controller) -> S
   with type request := C.Request.t
-  and type response := C.Response.t
+   and type response := C.Response.t
 (** Functor building a module for a master to control worker processes. *)
 
