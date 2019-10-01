@@ -2,4 +2,6 @@
  (names find_primes worker)
  (public_names find_primes worker)
  (libraries worker_process lwt zmq-lwt))
+; (ocamlopt_flags (:standard -p))
+; (link_flags (:standard -p)))
 
