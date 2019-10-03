@@ -20,7 +20,7 @@ let () =
   let open Lwt.Infix in
   Printf.printf "Finding prime numbers < %d (using %d worker) ..\n" limit num_worker;
   Lwt_main.run begin
-    let tic = Unix.time () in
+    let tic = Sys.time () in
     let z = Zmq.Context.create () in
     Controller.start_worker z 5555 5556 num_worker >>= fun (send, recv) -> begin
       Controller.recv_response recv num_worker >>= fun pids ->
@@ -28,16 +28,12 @@ let () =
           | Message.Response.Ok id -> Printf.printf "[%d]: started.\n" id
           | _                      -> failwith "Missing worker response") pids;
       Lwt.return_unit >>= fun () ->
-      let rec loop n =
-        if n <= limit then Controller.send_request send [Num n] >>= fun () ->
-          loop (n + 1)
-        else Lwt.return_unit
-      in
-      loop 1 >>= fun () ->
+      let reqs = List.init limit (fun x -> Message.Request.Num (x + 1)) in
+      Controller.send_request send reqs >>= fun () ->
       Controller.recv_response recv limit >>= fun resp ->
       let primes = List.filter (function | Message.Response.Yes _ -> true | _ -> false) resp
       in
-      let toc = Unix.time () in
+      let toc = Sys.time () in
       Printf.printf "Found %d primes (%.3fs).\n" (List.length primes) (toc -. tic);
       Lwt.return_unit >>= fun () ->
       Controller.send_request send (List.init num_worker (fun _ -> Message.Request.Stop)) >>= fun () ->
