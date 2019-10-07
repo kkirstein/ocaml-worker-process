@@ -28,9 +28,14 @@ let () =
           | Message.Response.Ok id -> Printf.printf "[%d]: started.\n" id
           | _                      -> failwith "Missing worker response") pids;
       Lwt.return_unit >>= fun () ->
+      let toc = Sys.time () in
+      Printf.printf "%d worker started in %.3fs.\n" num_worker (toc -. tic);
+      let tic = Sys.time () in
       let reqs = List.init limit (fun x -> Message.Request.Num (x + 1)) in
-      Controller.send_request send reqs >>= fun () ->
-      Controller.recv_response recv limit >>= fun resp ->
+      let sent = Controller.send_request send reqs
+      and received = Controller.recv_response recv limit in
+      sent >>= fun () ->
+      received >>= fun resp ->
       let primes = List.filter (function | Message.Response.Yes _ -> true | _ -> false) resp
       in
       let toc = Sys.time () in
