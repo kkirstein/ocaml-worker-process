@@ -21,10 +21,9 @@ let find_primes z limit num_worker =
   let tic = Sys.time () in
   Controller.start_worker z 5555 5556 num_worker >>= fun (send, recv) -> begin
     Controller.recv_response recv num_worker >>= fun pids ->
-    List.iter (function
-        | Message.Response.Ok id -> Printf.printf "[%d]: started.\n" id
-        | _                      -> failwith "Missing worker response") pids;
-    Lwt.return_unit >>= fun () ->
+    Lwt.return (List.iter (function
+        | Message.Response.Ok _ -> ()
+        | _                     -> failwith "Missing worker response") pids) >>= fun () ->
     let rec loop n =
       if n <= limit then Controller.send_request send [Num n] >>= fun () ->
         loop (n + 1)
@@ -49,7 +48,9 @@ let () =
     find_primes z 100_000 1 >>= fun () ->
     find_primes z 100_000 2 >>= fun () ->
     find_primes z 100_000 4 >>= fun () ->
-    find_primes z 100_000 8
+    find_primes z 100_000 8 >>= fun () ->
+    find_primes z 1_000 4 >>= fun () ->
+    find_primes z 10_000 4
   end;
   Zmq.Context.terminate z
 
