@@ -18,7 +18,7 @@ module Controller = Worker_process.Master.Make(struct
 
 let find_primes z limit num_worker =
   Printf.printf "Finding prime numbers < %d (using %d worker) ..\n" limit num_worker;
-  let tic = Unix.time () in
+  let tic = Sys.time () in
   Controller.start_worker z 5555 5556 num_worker >>= fun (send, recv) -> begin
     Controller.recv_response recv num_worker >>= fun pids ->
     List.iter (function
@@ -34,7 +34,7 @@ let find_primes z limit num_worker =
     Controller.recv_response recv limit >>= fun resp ->
     let primes = List.filter (function | Message.Response.Yes _ -> true | _ -> false) resp
     in
-    let toc = Unix.time () in
+    let toc = Sys.time () in
     Printf.printf "Found %d primes (%.3fs).\n" (List.length primes) (toc -. tic);
     Lwt.return_unit >>= fun () ->
     Controller.send_request send (List.init num_worker (fun _ -> Message.Request.Stop)) >>= fun () ->
