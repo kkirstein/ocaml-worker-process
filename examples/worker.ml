@@ -19,17 +19,17 @@ module Prime_worker = Worker_process.Worker.Make(struct
     let version = "0.1.0"
 
     let loop ~verbose recv send =
-      let _ = verbose in
       let pid = Unix.getpid () in
       let open Lwt.Infix in
       Zmq_lwt.Socket.send send (Response.marshal (Ok pid )) >>= fun () ->
+      if verbose then Lwt_io.printl (Printf.sprintf "[%d]: worker started." pid) else Lwt.return_unit >>= fun () ->
       let rec inner_loop () =
         Zmq_lwt.Socket.recv recv >>= fun req ->
         match Request.unmarshal req with
         | Num n -> (if is_prime n then
             Zmq_lwt.Socket.send send (Response.marshal (Yes n))
           else Zmq_lwt.Socket.send send (Response.marshal No)) >>= fun () -> inner_loop ()
-        | Stop          -> Lwt.return_unit
+        | Stop  -> if verbose then Lwt_io.printl (Printf.sprintf "[%d]: worker stopped." pid) else Lwt.return_unit
       in
     inner_loop ()
   end)
