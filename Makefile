@@ -10,7 +10,7 @@ else
 	EXT_EXE =
 endif
 
-dist_sources = examples/find_primes.exe examples/worker.exe
+dist_sources = examples/find_primes.exe examples/prime_worker.exe
 dist_target = $(foreach f,$(dist_sources),./dist/$(basename $(notdir $(f)$(EXT_EXE))))
 dist_assets =
 

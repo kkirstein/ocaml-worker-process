@@ -15,7 +15,7 @@ let is_prime n =
 
 
 module Prime_worker = Worker_process.Worker.Make(struct
-    let name = "worker"
+    let name = "prime_worker"
     let version = "0.1.0"
 
     let loop ~verbose recv send =

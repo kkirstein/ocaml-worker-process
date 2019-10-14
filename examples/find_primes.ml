@@ -13,7 +13,7 @@ open Message
 module Controller = Worker_process.Master.Make(struct
     module Request = Request
     module Response = Response
-    let worker_name = "worker"
+    let worker_name = "prime_worker"
   end)
 
 let find_primes z limit num_worker =
